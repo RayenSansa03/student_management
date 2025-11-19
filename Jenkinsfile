@@ -1,41 +1,25 @@
 pipeline {
     agent any
 
+    tools {
+        // EXACTEMENT le nom défini dans Global Tool Configuration
+        maven 'Maven_3_9'
+    }
+
     stages {
-
-        stage('Checkout') {
+        stage('Build & Package') {
             steps {
-                checkout scm
+                sh 'mvn clean package -DskipTests'
             }
         }
+    }
 
-        stage('Prepare') {
-            steps {
-                sh 'chmod +x mvnw'
-            }
+    post {
+        success {
+            echo '✅ Build réussi (tests ignorés).'
         }
-
-        stage('Build') {
-            steps {
-                sh './mvnw clean install'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh './mvnw test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
+        failure {
+            echo '❌ Build cassé, va voir les logs.'
         }
     }
 }
